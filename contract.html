@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>合同编码生成器</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #f4f4f4;
+    }
+    .container {
+      max-width: 600px;
+      margin: auto;
+      background-color: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    input, select, button {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+    button {
+      background-color: #007bff;
+      color: white;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: left;
+    }
+    th {
+      background-color: #f2f2f2;
+    }
+    a {
+      color: #007bff;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <!-- 使用国内CDN确保加载成功 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/17.0.2/umd/react.development.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/17.0.2/umd/react-dom.development.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/6.26.0/babel.min.js"></script>
+
+  <script type="text/babel">
+    const provincePrefixMap = {
+      北京市: { prefix: 'AN-202501', start: 1000 },
+      天津市: { prefix: 'AN-202502', start: 1000 },
+      河北省: { prefix: 'AN-202503', start: 1000 },
+      山西省: { prefix: 'AN-202504', start: 1000 },
+      内蒙古: { prefix: 'AN-202505', start: 1000 },
+      辽宁省: { prefix: 'AN-202506', start: 1000 },
+      吉林省: { prefix: 'AN-202507', start: 1000 },
+      黑龙江省: { prefix: 'AN-202508', start: 1000 },
+      上海市: { prefix: 'AN-202509', start: 1000 },
+      江苏省: { prefix: 'AN-202510', start: 1000 },
+      浙江省: { prefix: 'AN-202511', start: 1000 },
+      安徽省: { prefix: 'AN-202512', start: 1000 },
+      福建省: { prefix: 'AN-202513', start: 1000 },
+      江西省: { prefix: 'AN-202514', start: 1000 },
+      山东省: { prefix: 'AN-202515', start: 1000 },
+      河南省: { prefix: 'AN-202516', start: 1000 },
+      湖北省: { prefix: 'AN-202517', start: 1000 },
+      湖南省: { prefix: 'AN-202518', start: 1000 },
+      广东省: { prefix: 'AN-202519', start: 1000 },
+      广西: { prefix: 'AN-202520', start: 1000 },
+      海南省: { prefix: 'AN-202521', start: 1000 },
+      重庆市: { prefix: 'AN-202522', start: 1000 },
+      四川省: { prefix: 'AN-202523', start: 1000 },
+      贵州省: { prefix: 'AN-202524', start: 1000 },
+      云南省: { prefix: 'AN-202525', start: 1000 },
+      西藏: { prefix: 'AN-202526', start: 1000 },
+      陕西省: { prefix: 'AN-202527', start: 1000 },
+      甘肃省: { prefix: 'AN-202528', start: 1000 },
+      青海省: { prefix: 'AN-202529', start: 1000 },
+      宁夏: { prefix: 'AN-202530', start: 1000 },
+      新疆: { prefix: 'AN-202531', start: 1000 },
+    };
+
+    function ContractCodeGenerator() {
+      const [companyName, setCompanyName] = React.useState('');
+      const [province, setProvince] = React.useState('');
+      const [contractCodes, setContractCodes] = React.useState([]);
+
+      const generateContractCode = () => {
+        if (!companyName || !province) {
+          alert('请输入公司名和省份');
+          return;
+        }
+
+        const provinceInfo = provincePrefixMap[province];
+        if (!provinceInfo) {
+          alert('无效的省份');
+          return;
+        }
+
+        // 检查公司名是否已存在
+        const existingEntry = contractCodes.find(code => code.companyName === companyName);
+        if (existingEntry) {
+          alert('该公司已存在合同编码');
+          return;
+        }
+
+        // 获取当前省份最新编号
+        const lastCode = contractCodes
+          .filter(code => code.province === province)
+          .map(code => parseInt(code.code.split('-')[2]))
+          .pop() || provinceInfo.start - 1;
+
+        const newNumber = lastCode + 1;
+        const newCode = `${provinceInfo.prefix}-${newNumber.toString().padStart(5, '0')}`;
+        
+        setContractCodes([...contractCodes, { companyName, province, code: newCode }]);
+        setCompanyName('');
+        setProvince('');
+      };
+
+      const latestCode = contractCodes[contractCodes.length - 1] || null;
+      const appDomain = 'https://your-app-domain.com';
+
+      return (
+        <div className="container">
+          <h2>合同编码生成器</h2>
+          <input
+            type="text"
+            placeholder="公司名"
+            value={companyName}
+            onChange={(e) => setCompanyName(e.target.value)}
+          />
+          <select
+            value={province}
+            onChange={(e) => setProvince(e.target.value)}
+          >
+            <option value="">请选择省份</option>
+            {Object.keys(provincePrefixMap).map((prov) => (
+              <option key={prov} value={prov}>{prov}</option>
+            ))}
+          </select>
+          <button onClick={generateContractCode}>
+            生成合同编码
+          </button>
+
+          {latestCode && (
+            <div>
+              <h3>最新生成的合同编码</h3>
+              <p>公司名: {latestCode.companyName}</p>
+              <p>省份: {latestCode.province}</p>
+              <p>合同编码: <a href={`${appDomain}/#/${latestCode.code}`}>{latestCode.code}</a></p>
+            </div>
+          )}
+
+          {contractCodes.length > 0 && (
+            <div>
+              <h3>历史合同编码</h3>
+              <table>
+                <thead>
+                  <tr>
+                    <th>公司名</th>
+                    <th>省份</th>
+                    <th>合同编码</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {contractCodes.map((entry, index) => (
+                    <tr key={index}>
+                      <td>{entry.companyName}</td>
+                      <td>{entry.province}</td>
+                      <td><a href={`${appDomain}/#/${entry.code}`}>{entry.code}</a></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    ReactDOM.render(<ContractCodeGenerator />, document.getElementById('root'));
+  </script>
+</body>
+</html>
+      
+     
+   
